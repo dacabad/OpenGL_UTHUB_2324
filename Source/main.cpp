@@ -1,14 +1,27 @@
 #include <iostream>
+#include <vector>
 
+#include "Cube.h"
 #include "glad/glad.h"
 #include "glfw3.h"
 #include "Shader.h"
 #include "glm.hpp"
 #include "ext.hpp"
 
-#define ERRMSG_SUCCESS					0x00000000
-#define ERRMSG_FAILED_LOAD_WINDOW		0x00000101
-#define ERRMSG_FAILED_LOAD_GLAD			0x00000102
+
+
+#define ERRMSG_SUCCESS					0b00000000
+#define ERRMSG_FAILED_LOAD_WINDOW		0b00000100
+#define ERRMSG_FAILED_LOAD_GLAD			0b00000001
+
+//{
+//	ERRMSG_FAILED_LOAD_GLAD | ERRMSG_FAILED_LOAD_WINDOW
+//
+//	0b00000100
+//	0b00000001
+//
+//	0b00000101
+//}
 
 constexpr int WINDOW_WIDTH		= 800;
 constexpr int WINDOW_HEIGHT		= 800;
@@ -57,6 +70,8 @@ GLFWwindow* initOpenGL(uint8_t& err_level)
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
+	
+
 	err_level = ERRMSG_SUCCESS;
 
 	// Window setup
@@ -88,8 +103,6 @@ int main()
 	GLFWwindow* window = initOpenGL(err);
 
 	// SETUP
-	
-
 	unsigned int VBO;
 	glGenBuffers(1, &VBO);
 
@@ -98,12 +111,13 @@ int main()
 	glBindVertexArray(VAO);
 
 	glBindBuffer(GL_ARRAY_BUFFER, VBO); // estoy configurando que las órdenes que vienen tienen que ver con este VBO
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	//glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(Shapes::cube), Shapes::cube, GL_STATIC_DRAW);
 
-	unsigned int IBO;
+	/*unsigned int IBO;
 	glGenBuffers(1, &IBO);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);*/
 
 	// positions
 	glEnableVertexAttribArray(0);
@@ -125,10 +139,11 @@ int main()
 	Shader fragmentRed("Shaders/fragmentShaderRed.glsl", GL_FRAGMENT_SHADER);
 	ShaderProgram shaderProgramRed(vertex, fragmentRed);
 
-	glm::mat4 transformMat(1.f);
-	transformMat = glm::translate(transformMat, glm::vec3(-0.2f, 0.3f, 0.f));
-	transformMat = glm::rotate(transformMat, 45.f, worldVectors::forwardVector);
-	transformMat = glm::scale(transformMat, glm::vec3(0.5f));
+
+	std::vector<glm::vec3> objectLocations;
+	objectLocations.push_back(glm::vec3{0.f, 0.f, 0.f});
+	objectLocations.push_back(glm::vec3{1.f, 0.f, 1.f});
+	objectLocations.push_back(glm::vec3{-0.5f, -0.5f, -1.f});
 
 	// Render loop
 	while(!glfwWindowShouldClose(window))
@@ -136,18 +151,36 @@ int main()
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 
+		glEnable(GL_DEPTH_TEST);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
 		glBindVertexArray(VAO);
 
-		shaderProgram.useProgram();
+		for(auto location : objectLocations)
+		{
+			shaderProgram.useProgram();
 
-		GLint colorUniformId = glGetUniformLocation(shaderProgram.getShaderId(), "polyColor");
+			GLint colorUniformId = glGetUniformLocation(shaderProgram.getShaderId(), "polyColor");
 
-		glUniform4f(colorUniformId, 1.f, 1.f, 1.f, 1.f);
-		glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, nullptr);
-		//glDrawArrays(GL_TRIANGLES, 0, 3);
+			glUniform4f(colorUniformId, 1.f, 1.f, 1.f, 1.f);
 
-		glUniform4f(colorUniformId, 1.f, 0.f, 1.f, 1.f);
-		glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * 3));
-		//glDrawArrays(GL_TRIANGLES, 3, 3);
+			glm::mat4 transformMat(1.f);
+			transformMat = glm::rotate(transformMat, glm::radians((float)glfwGetTime() * 30.f), worldVectors::forwardVector);
+			transformMat = glm::rotate(transformMat, glm::radians((float)glfwGetTime() * 30.f), worldVectors::upVector);
+			transformMat = glm::scale(transformMat, glm::vec3(0.5f));
+			//transformMat = glm::translate(transformMat, glm::vec3(-0.2f, 0.3f, 0.f));
+			transformMat = glm::translate(transformMat, location);
+
+			GLint transformUniformLocation = glGetUniformLocation(shaderProgram.getShaderId(), "transformMatrix");
+			glUniformMatrix4fv(transformUniformLocation, 1, GL_FALSE, glm::value_ptr(transformMat));
+
+			//glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, nullptr);
+
+			glDrawArrays(GL_TRIANGLES, 0, std::size(Shapes::cube));
+
+			glUniform4f(colorUniformId, 1.f, 0.f, 1.f, 1.f);
+			//glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * 3));
+			//glDrawArrays(GL_TRIANGLES, 3, 3);
+		}
 	}
 }

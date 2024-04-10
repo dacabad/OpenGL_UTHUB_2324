@@ -169,6 +169,7 @@
     <None Include="Shaders\vertexShader.glsl" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Source\Cube.h" />
     <ClInclude Include="Source\Shader.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
