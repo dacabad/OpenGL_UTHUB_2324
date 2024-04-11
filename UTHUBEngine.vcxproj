@@ -159,6 +159,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Model.cpp" />
     <ClCompile Include="Source\main.cpp" />
     <ClCompile Include="Source\Shader.cpp" />
     <ClCompile Include="ThirdParty\glad\src\glad.c" />
@@ -169,6 +170,7 @@
     <None Include="Shaders\vertexShader.glsl" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Model.h" />
     <ClInclude Include="Source\Cube.h" />
     <ClInclude Include="Source\Shader.h" />
   </ItemGroup>

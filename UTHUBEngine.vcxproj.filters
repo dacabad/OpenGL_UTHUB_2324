@@ -24,6 +24,7 @@
     <ClCompile Include="Source\Shader.cpp">
       <Filter>Source</Filter>
     </ClCompile>
+    <ClCompile Include="Model.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\vertexShader.glsl">
@@ -43,5 +44,6 @@
     <ClInclude Include="Source\Cube.h">
       <Filter>Source</Filter>
     </ClInclude>
+    <ClInclude Include="Model.h" />
   </ItemGroup>
 </Project>
