@@ -17,8 +17,8 @@ class Model
 public:
 
 	Transform transform_;
-	std::vector<float>	vertices;
-	std::vector<int>	indices;
+	std::vector<float>			vertices;
+	std::vector<unsigned int>	indices;
 
 public:
 
@@ -32,4 +32,8 @@ private:
 	void loadModel(const std::string& path);
 };
 
-
+class Entity
+{
+	Model* baseModel = nullptr;
+	Transform modelTransform;
+};

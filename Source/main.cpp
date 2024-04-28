@@ -1,4 +1,5 @@
 #include <iostream>
+#include <unordered_set>
 #include <vector>
 
 #include "Cube.h"
@@ -96,16 +97,27 @@ GLFWwindow* initOpenGL(uint8_t& err_level)
 	return window;
 }
 
+void SpawnModel(Transform inTransform);
 
 int main()
 {
 	uint8_t err;
 	GLFWwindow* window = initOpenGL(err);
 
-	Model model("Contents/teapot.obj");
-	model.transform_.location.x = 10.f;
+	Model model("Contents/shrek_reduced.obj");
+	model.transform_.location.x = 0.f;
 	model.transform_.location.y = 0.f;
-	model.transform_.location.x = -10.f;
+	model.transform_.location.z = 0.f;
+
+	Model anothermodel("Contents/teapot.obj");
+	anothermodel.transform_.location.x = 0.f;
+	anothermodel.transform_.location.y = 0.f;
+	anothermodel.transform_.location.z = -10.f;
+
+	std::vector<Model> modelArray;
+	modelArray.push_back(model);
+	//modelArray.push_back(anothermodel);
+
 
 	// SETUP
 	unsigned int VBO;
@@ -135,13 +147,10 @@ int main()
 
 	Shader vertex("Shaders/vertexShader.glsl", GL_VERTEX_SHADER);
 	Shader fragment("Shaders/fragmentShader.glsl", GL_FRAGMENT_SHADER);
+
+
+
 	ShaderProgram shaderProgram(vertex, fragment);
-
-	glm::mat4 view(1.f);
-	view = glm::translate(view, glm::vec3(0.f, 0.f, -10.f));
-
-	glm::mat4 perspective(1.f);
-	perspective = glm::perspective(glm::radians(45.f), WINDOW_WIDTH/WINDOW_HEIGHT, 0.1f, 100.f);
 
 	while(!glfwWindowShouldClose(window))
 	{
@@ -150,25 +159,37 @@ int main()
 
 		glEnable(GL_DEPTH_TEST);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glClearColor(0.5f, 0.5f, 0.5f, 1.f);
 
 		glBindVertexArray(VAO);
 
 		shaderProgram.useProgram();
 
 		GLint colorUniformId = glGetUniformLocation(shaderProgram.getShaderId(), "polyColor");
-		glUniform4f(colorUniformId, 1.f, 1.f, 1.f, 1.f);
+		glUniform4f(colorUniformId, 0xAA, 0xCC, 0x00, 1.f);
 
-		glm::mat4 modelMat(1.f);
-		modelMat = glm::translate(modelMat, model.transform_.location);
-		modelMat = glm::rotate(modelMat, glm::radians((float)glfwGetTime() * 30.f), worldVectors::forwardVector);
-		modelMat = glm::rotate(modelMat, glm::radians((float)glfwGetTime() * 30.f), worldVectors::upVector);
-		modelMat = glm::scale(modelMat, glm::vec3(3 * glm::cos(glfwGetTime())));
+		for(const auto& localRenderModel : modelArray)
+		{
+			glm::mat4 modelMat(1.f);
+			modelMat = glm::translate(modelMat, localRenderModel.transform_.location);
+			//modelMat = glm::rotate(modelMat, glm::radians((float)glfwGetTime() * 30.f), worldVectors::forwardVector);
+			modelMat = glm::rotate(modelMat, glm::radians((float)glfwGetTime() * 30.f), worldVectors::rightVector);
+			//modelMat = glm::rotate(modelMat, glm::radians((float)glfwGetTime() * 30.f), worldVectors::upVector);
+			//modelMat = glm::scale(modelMat, glm::vec3(3 * glm::cos(glfwGetTime())));
 
-		glm::mat4 mvp = perspective * view * modelMat;
+			glm::mat4 view(1.f);
+			//view = glm::translate(view, glm::vec3(0.f, 0.f, -10.f * (glm::cos(glfwGetTime()) + 1) * 0.5));
+			view = glm::translate(view, glm::vec3(0.f, 0.f, -10.f));
 
-		GLint mvpUniformLocation = glGetUniformLocation(shaderProgram.getShaderId(), "mvp");
-		glUniformMatrix4fv(mvpUniformLocation, 1, GL_FALSE, glm::value_ptr(mvp));
+			glm::mat4 perspective(1.f);
+			perspective = glm::perspective(glm::radians(45.f), WINDOW_WIDTH/WINDOW_HEIGHT, 0.1f, 100.f);
 
-		glDrawElements(GL_TRIANGLES, model.indices.size(), GL_UNSIGNED_INT, (void*)0);
+			glm::mat4 mvp = perspective * view * modelMat;
+
+			GLint mvpUniformLocation = glGetUniformLocation(shaderProgram.getShaderId(), "mvp");
+			glUniformMatrix4fv(mvpUniformLocation, 1, GL_FALSE, glm::value_ptr(mvp));
+
+			glDrawElements(GL_TRIANGLES, localRenderModel.indices.size(), GL_UNSIGNED_INT, (void*)0);
+		}
 	}
 }

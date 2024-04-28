@@ -16,10 +16,14 @@ public:
 
 	void validateShader();
 
+	template<typename T>
+	void setParameter(const std::string& param, T value);
+
 private:
 
 	void loadShaderFromFile(const std::string& pathToShaderFile, std::string& outShaderContents);
 };
+
 
 class ShaderProgram
 {
